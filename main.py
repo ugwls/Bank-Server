@@ -34,9 +34,28 @@ def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.get("/spend/history")
 def spend_history(token: str = Depends(oauth_scheme)):
     print(token)
-    print("SPEND History")
+    # Spend history logic
+    with open('spendhist.json', 'r') as f:
+        spend_hist_data = json.load(f)
+    if not spend_hist_data.get(token):
+        raise HTTPException(
+            status_code=403, detail="Username not found in the spend history DB")
+    return {
+        "Username": token,
+        "Spend_hist": spend_hist_data[token]
+    }
 
 
 @app.get("/creditcard/history")
 def credit_history(token: str = Depends(oauth_scheme)):
     print(token)
+    # Credit Card history logic
+    with open('credithist.json', 'r') as f:
+        credit_hist_data = json.load(f)
+    if not credit_hist_data.get(token):
+        raise HTTPException(
+            status_code=403, detail="Username not found in the CreditCard history DB")
+    return {
+        "Username": token,
+        "Credit_Hist": credit_hist_data[token]
+    }
