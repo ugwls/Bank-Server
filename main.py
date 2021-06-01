@@ -93,3 +93,16 @@ def transfer_money(token: str = Depends(oauth_scheme), destination_user: str = B
         "username": token,
         "message": f"Money {amount_to_transfer} succesfully transferd to {destination_user}"
     }
+
+
+@app.get("/userbalance")
+def get_userbalance(token: str = Depends(oauth_scheme)):
+    with open('userbalance.json', 'r') as f:
+        userbalance = json.load(f)
+    if not userbalance.get(token):
+        raise HTTPException(
+            status_code=400, detail="User not Found.")
+    return {
+        'Username': token,
+        'User Balance': userbalance[token]['curr_balance']
+    }
