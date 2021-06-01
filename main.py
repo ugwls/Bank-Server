@@ -59,3 +59,37 @@ def credit_history(token: str = Depends(oauth_scheme)):
         "Username": token,
         "Credit_Hist": credit_hist_data[token]
     }
+
+
+@app.post("/transfer_money")
+def transfer_money(token: str = Depends(oauth_scheme), destination_user: str = Body(...), amount_to_transfer: int = Body(...)):
+    print(token)
+    print(destination_user)
+    print(amount_to_transfer)
+
+    userbalance_data = None
+    with open('userbalance.json', 'r') as f:
+        userbalance_data = json.load(f)
+        # Current user balance
+        curr_user_bal = userbalance_data.get(token)['curr_balance']
+        print(f'Current User Balance: {curr_user_bal}')
+        # destination user balance
+        dest_user = userbalance_data.get(destination_user)
+        if not dest_user:
+            raise HTTPException(
+                status_code=400, detail="Destination User is not present in the DB, Cannot transfer money")
+        dest_user_bal = dest_user['curr_balance']
+        print(f"Destination User Balance: {dest_user_bal}")
+        if curr_user_bal - amount_to_transfer < 0:
+            raise HTTPException(
+                status_code=400, detail="Amount to transfer is greater than account balance. Cannot tranfer money")
+
+    userbalance_data[token]['curr_balance'] -= amount_to_transfer
+    print(userbalance_data)
+    userbalance_data[destination_user]['curr_balance'] += amount_to_transfer
+    with open('userbalance.json', 'w') as f:
+        json.dump(userbalance_data, f)
+    return {
+        "username": token,
+        "message": f"Money {amount_to_transfer} succesfully transferd to {destination_user}"
+    }
